@@ -13,7 +13,7 @@ class Q_learner:
         self.gamma = gamma
         self.above_epsilon = above_epsilon
         self.curr_x = 0
-        self.possible_actions = np.linspace(160, 480, 20)
+        self.possible_actions = np.linspace(160, 480, 50)
         self.fc = FeatureConverter(max_stack, self.possible_actions)
         self.max_turns = max_stack - 1
         self.total_turns = []
@@ -133,7 +133,7 @@ if __name__ == '__main__':
     #screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), display=1)
     #pygame.display.set_caption('test')
     #clock = pygame.time.Clock()
-    SARSA_agent = Q_learner(0.1, 0.01, 100, 1e-6)
+    SARSA_agent = Q_learner(0.1, 0.01, 100, 1e-7)
     mean_list = []
     changes = []
     all_vals = []

@@ -63,7 +63,7 @@ class Environment:
             if box.position[1] > curr_pos:
                 self.height_reward = box.position[1]
                 curr_pos = box.position[1]
-        return self.body_list, self.item_sizes, self.height_reward, success_bool
+        return self.body_list, self.item_sizes, (self.height_reward-10)/80, success_bool
 
 
 if __name__ == '__main__':
