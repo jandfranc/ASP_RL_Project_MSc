@@ -31,7 +31,7 @@ class Q_learner:
         first_loop = True
         turn = -1
         self.curr_state = []
-        curr_reward = 0
+        curr_reward = []
         self.curr_state = [self.env.body_list[0].position]
         while success_bool:
             turn += 1
@@ -50,15 +50,14 @@ class Q_learner:
                 self.update_val(next_move, update_move, turn)
             if turn == self.max_turns:
                 success_bool = False
-            if reward > 0:
-                curr_reward += reward
+            curr_reward.append(reward)
             #if iter % 100 == 0:
                 #self.update_screen()
 
         if turn == 0:
             update_move = next_move[:]
 
-        self.all_rewards.append(curr_reward)
+        self.all_rewards.append(max(curr_reward))
         self.total_turns.append(turn)
         self.final_value_update(reward, update_move, turn)
 
@@ -144,7 +143,7 @@ if __name__ == '__main__':
             mean_list.append(np.mean(SARSA_agent.all_rewards))
             all_vals.append(SARSA_agent.total_turns)
             changes.append(SARSA_agent.biggest_change)
-            if i % 10 == 0:
+            if i % 100 == 0:
                 print(i)
             if i % 1000 == 0 and i != 0:
                 plt.plot(mean_list)
