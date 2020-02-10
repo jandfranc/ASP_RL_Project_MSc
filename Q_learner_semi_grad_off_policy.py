@@ -34,6 +34,7 @@ class Q_learner:
         self.curr_state = []
         curr_reward = []
         self.init_state = self.env.body_list[0].position
+        updates = []
         while success_bool:
             turn += 1
             action = self.choose_move_train(first_loop, turn)
@@ -42,13 +43,8 @@ class Q_learner:
             for box in obj_list[1:]:
                 self.curr_state.append(box.position)
             # print(self.curr_state)
-            if first_loop:
-                next_move = [reward, self.curr_state, action]
-                first_loop = False
-            else:
-                update_move = next_move[:]
-                next_move = [reward, self.curr_state, action]
-                self.update_val(next_move, update_move, turn)
+            updates.append([reward, self.curr_state, action])
+
             if turn == self.max_turns:
                 success_bool = False
             curr_reward.append(reward)
@@ -57,10 +53,18 @@ class Q_learner:
 
         if turn == 0:
             update_move = next_move[:]
-
+        first_update = True
+        updates.reverse()
+        for update in updates:
+            if first_update:
+                self.final_value_update(reward, update, turn)
+                next_move = update
+            else:
+                self.update_val(next_move, update, turn)
+                next_move = update
         #self.all_rewards.append(max(curr_reward))
         #self.total_turns.append(turn)
-        self.final_value_update(reward, update_move, turn)
+        #self.final_value_update(reward, update_move, turn)
 
     def test(self, iter, show_screen):
         self.env = Environment()
@@ -227,7 +231,7 @@ if __name__ == '__main__':
              #   plt.plot(all_vals)
               #  plt.show()
     print(SARSA_agent.fc.theta)
-    plt.plot(mean_list)
+    plt.plot(all_vals)
     plt.show()
     plt.plot(changes)
     plt.show()

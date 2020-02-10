@@ -24,7 +24,7 @@ class Environment:
             angle=0
         )
         self.body_list = [self.ground_body]
-        self.init_height = 40
+        self.init_height = 74
         self.colour_list.append((255, 255, 255, 255))
 
     def add_box(self, position, density, friction, angle, size):
@@ -43,17 +43,19 @@ class Environment:
 
     def play_action(self, x_pos, box):
         self.add_box((x_pos, self.init_height), 1, 1, 0, box)
-        self.init_height += box[1]
         height_list = []
         success_bool = True
+        for _ in range(100):
+            self.world.Step(TIME_STEP, 10, 10)
         for n_body in self.body_list:
             height_list.append(n_body.position[1])
-        for _ in range(1000):
+        for _ in range(2000):
             self.world.Step(TIME_STEP, 10, 10)
         for i_body, n_body in enumerate(self.body_list):
             if n_body.position[1] < height_list[i_body] - 5:
                 success_bool = False
-                reward = -10000000
+                reward = -100
+                reward = len(self.body_list)-1
                 prev_list = self.body_list[1:]
                 prev_sizes = self.item_sizes[:]
                 self.reset_world()
@@ -63,7 +65,10 @@ class Environment:
             if box.position[1] > curr_pos:
                 self.height_reward = box.position[1]
                 curr_pos = box.position[1]
-        return self.body_list, self.item_sizes, (self.height_reward-10)/80, success_bool
+        self.init_height = int(curr_pos) + 64
+        reward = ((self.height_reward-10)/64)**2
+        reward = 0
+        return self.body_list, self.item_sizes, reward, success_bool
 
 
 if __name__ == '__main__':
