@@ -33,6 +33,11 @@ class Environment:
         self.item_sizes.append(size)
         self.colour_list.append((random.randint(0, 255), random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)))
 
+    def activate_wind(self):
+        if len(self.body_list) > 1:
+            for box in self.body_list[1:]:
+                box.ApplyLinearImpulse((10000, 0), box.position, True)
+
     def reset_world(self):
         for i_body in range(len(self.body_list)):
             if i_body != 0:
@@ -42,13 +47,14 @@ class Environment:
         self.item_sizes = []
 
     def play_action(self, x_pos, box):
-        self.add_box((x_pos, self.init_height), 1, 1, 0, box)
+        self.add_box((x_pos, self.init_height), 1, 0.5, 0, box)
         height_list = []
         success_bool = True
         for _ in range(100):
             self.world.Step(TIME_STEP, 10, 10)
         for n_body in self.body_list:
             height_list.append(n_body.position[1])
+        self.activate_wind()
         for _ in range(2000):
             self.world.Step(TIME_STEP, 10, 10)
         for i_body, n_body in enumerate(self.body_list):
@@ -78,7 +84,7 @@ if __name__ == '__main__':
     pygame.display.set_caption('test')
     clock = pygame.time.Clock()
     while True:
-        '''
+
         for event in pygame.event.get():
             if event.type == QUIT or (event.type == KEYDOWN and event.key == P):
                 # The user closed the window or pressed escape
@@ -86,10 +92,10 @@ if __name__ == '__main__':
 
         i += 1
         if i % 50 == 0:
-            env.add_box((random.randint(25, 191), i), i*i*i, 1, random.randint(0, 360), (5, 5))
+            env.add_box((random.randint(20, 21), i/10 + 20), 1, 1, 0, (1, 1))
         if i % 1251 == 0:
-            env.add_box((108, i/3), i*i*i, 1, random.randint(0, 360), (50, 50))
-        '''
+            env.add_box((20, i/3), 1, 1, random.randint(0, 360), (50, 50))
+        env.activate_wind()
         screen.fill((0, 0, 0, 0))
         iterator = 0
         for iterator, body in enumerate(env.body_list):

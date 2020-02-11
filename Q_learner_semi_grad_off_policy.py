@@ -66,7 +66,7 @@ class Q_learner:
         #self.total_turns.append(turn)
         #self.final_value_update(reward, update_move, turn)
 
-    def test(self, iter, show_screen):
+    def test(self, iter, show_screen, action):
         self.env = Environment()
         self.biggest_change = float('-inf')
         success_bool = True
@@ -77,8 +77,8 @@ class Q_learner:
         self.init_state = self.env.body_list[0].position
         while success_bool:
             turn += 1
-            action = self.choose_move_test(first_loop, turn)
-            obj_list, sizes, reward, success_bool = self.env.play_action(action + np.random.normal(0,6), (32, 32))
+            action = self.choose_move_test(first_loop, turn, action)
+            obj_list, sizes, reward, success_bool = self.env.play_action(action, (32, 32))
             self.curr_state = [self.init_state]
             first_loop = False
             for box in obj_list[1:]:
@@ -110,7 +110,7 @@ class Q_learner:
 
         return action
 
-    def choose_move_test(self, first_loop, turn):
+    def choose_move_test(self, first_loop, turn, action):
         possible_actions = self.possible_actions.tolist()
         if not first_loop:
             action = False
@@ -122,7 +122,7 @@ class Q_learner:
                     prev_reward = move_reward
         else:
 
-            action = np.random.choice(self.possible_actions)
+            action = self.possible_actions[action]
 
         self.previous_action = action
 
@@ -190,7 +190,7 @@ if __name__ == '__main__':
     TARGET_FPS = 60
     TIME_STEP = 1.0 / TARGET_FPS
 
-    SARSA_agent = Q_learner(0.9, 1, 1000, 1e-7)
+    SARSA_agent = Q_learner(0.9, 1, 1000, 1e-6)
     mean_list = []
     changes = []
     all_vals = []
@@ -202,8 +202,8 @@ if __name__ == '__main__':
             #changes.append(SARSA_agent.biggest_change)
             if i % 100 == 0:
                 print(i)
-            if i % 25000 == 0 and i != 0:
-                total_test = 100
+            if i % 25000 == 0 and i != 1:
+                total_test = 10
                 show_screen = True
                 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), display=1)
                 pygame.display.set_caption('test')
@@ -214,11 +214,11 @@ if __name__ == '__main__':
             else:
                 total_test = 10
                 show_screen = False
-            if i % 1000 == 0 and i != 0:
+            if i % 1000 == 0 and i != 1:
                 print('beginning test')
                 curr_means = []
                 for iterator in range(total_test):
-                    SARSA_agent.test(i, show_screen)
+                    SARSA_agent.test(i, show_screen, iterator)
                     curr_means.append(int(SARSA_agent.all_rewards[-1]))
                 mean_list.append(np.mean(curr_means))
                 all_vals.append(np.mean(mean_list))
