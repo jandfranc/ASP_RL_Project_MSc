@@ -7,7 +7,7 @@ class FeatureConverter():
         self.possible_actions = possible_actions
         self.actions = np.linspace(0, len(self.possible_actions)-1, len(self.possible_actions))
         self.max_stack = max_stack
-        self.init_feat = 28
+        self.init_feat = 39
         self.features = self.init_feat*len(self.possible_actions)
         self.theta = np.random.randn(self.features)
 
@@ -28,12 +28,12 @@ class FeatureConverter():
         return mode_y, mode_val_y
 
     def x_height(self, x, sections):
-        x_check = np.linspace(160, 480, sections)
+        x_check = np.linspace(176, 464, sections)
         x_list = []
         for i, checker in enumerate(x_check):
             x_list.append(0)
             for i_x in x:
-                if checker + 5 > i_x > checker - 5:
+                if checker + 33 > i_x > checker - 33:
                     x_list[i] += 1
         return x_list
 
@@ -45,8 +45,9 @@ class FeatureConverter():
         return x_adj_list
 
     def x_wobble(self, x, sections):
-        x_split = []
-        x_check = np.linspace(160, 480, sections)
+        x_split_right = []
+        x_split_left = []
+        x_check = np.linspace(176, 464, sections)
         for i, checker in enumerate(x_check):
             first_loop_right = True
             first_loop_left = True
@@ -72,12 +73,15 @@ class FeatureConverter():
                         else:
                             wobble_left = (wobble_left + i_x-sect_mean)/2
                 if abs(wobble_right) > abs(wobble_left):
-                    x_split.append(wobble_right)
+                    x_split_right.append(wobble_right)
+                    x_split_left.append(0)
                 else:
-                    x_split.append(wobble_left)
+                    x_split_left.append(wobble_left)
+                    x_split_right.append(0)
             else:
-                x_split.append(0)
-        return x_split
+                x_split_left.append(0)
+                x_split_right.append(0)
+        return x_split_left, x_split_right
 
 
 
@@ -93,11 +97,10 @@ class FeatureConverter():
         for i in s:
             y.append(i[1])
             x.append(i[0])
-        max_h = max(y)
-        mode_y, mode_val_y = self.mode_func(y)
+
         x_list = self.x_height(x, 10)
         x_adj_list = self.x_adj(x_list)
-        x_wobble_list = self.x_wobble(x, 10)
+        x_wobble_left, x_wobble_right = self.x_wobble(x, 10)
         f = 0 + move_idx * self.init_feat
         #return_array[f] = np.mean(x) - x[-1]
         #return_array[f+1] = np.mean(x)
@@ -106,10 +109,11 @@ class FeatureConverter():
         #return_array[f+4] = max_h
         #return_array[f+5] = 1
         #return_array[f+6] = np.mean(x) - a # 6
-        #return_array[f+7] = mode_y
-        #return_array[f+8] = mode_val_y
+        #return_array[f] = mode_y
+        #return_array[f+1] = mode_val_y
         #return_array[f+9] = 1
-        adder = -1
+        return_array[f] = 1
+        adder = 0
         for i in x_list:
             adder += 1
             return_array[f+adder] = i
@@ -117,8 +121,12 @@ class FeatureConverter():
         for i in x_adj_list:
             adder += 1
             return_array[f+adder] = i
+        
+        for i in x_wobble_left:
+            adder += 1
+            return_array[f + adder] = i
 
-        for i in x_wobble_list:
+        for i in x_wobble_right:
             adder += 1
             return_array[f + adder] = i
 

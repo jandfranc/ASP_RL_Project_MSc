@@ -21,6 +21,7 @@ class Q_learner:
         self.step_size = step_size
         self.all_rewards = []
         self.previous_action = 'EEEE'
+        self.mean_reward = 0
         # state_dict architecture: upper_level is height (so number of turns),
         # second is positions of objects in bottom-up height order, third is actions,
         # final level is reward.
@@ -35,10 +36,12 @@ class Q_learner:
         curr_reward = []
         self.init_state = self.env.body_list[0].position
         updates = []
+
         while success_bool:
             turn += 1
             action = self.choose_move_train(first_loop, turn)
-            obj_list, sizes, reward, success_bool = self.env.play_action(action + np.random.normal(0,3), (32, 32))
+            obj_list, sizes, reward, success_bool_set = self.env.play_action(action, (32, 32))
+            reward = reward - self.mean_reward
             self.curr_state = [self.init_state]
             for box in obj_list[1:]:
                 self.curr_state.append(box.position)
@@ -50,9 +53,8 @@ class Q_learner:
             curr_reward.append(reward)
             # if iter % 100 == 0:
                 # self.update_screen()
+            success_bool = success_bool_set
 
-        if turn == 0:
-            update_move = next_move[:]
         first_update = True
         updates.reverse()
         for update in updates:
@@ -78,7 +80,7 @@ class Q_learner:
         while success_bool:
             turn += 1
             action = self.choose_move_test(first_loop, turn, action)
-            obj_list, sizes, reward, success_bool = self.env.play_action(action, (32, 32))
+            obj_list, sizes, reward, success_bool_set = self.env.play_action(action, (32, 32))
             self.curr_state = [self.init_state]
             first_loop = False
             for box in obj_list[1:]:
@@ -89,6 +91,7 @@ class Q_learner:
             # if iter % 100 == 0:
             if show_screen:
                 self.update_screen()
+            success_bool = success_bool_set
         self.all_rewards.append(max(curr_reward))
         self.total_turns.append(turn)
 
@@ -190,19 +193,17 @@ if __name__ == '__main__':
     TARGET_FPS = 60
     TIME_STEP = 1.0 / TARGET_FPS
 
-    SARSA_agent = Q_learner(0.9, 1, 1000, 1e-6)
+    SARSA_agent = Q_learner(0.9, 0.1, 1000, 1e-3)
     mean_list = []
     changes = []
     all_vals = []
-    for i in range(100000):
+    for i in range(1000000):
         if True:
             SARSA_agent.train(i)
             #mean_list.append(np.mean(SARSA_agent.all_rewards[-500:-1]))
             #all_vals.append(SARSA_agent.total_turns)
             #changes.append(SARSA_agent.biggest_change)
-            if i % 100 == 0:
-                print(i)
-            if i % 25000 == 0 and i != 1:
+            if i % 50000 == 0 and i != 1:
                 total_test = 10
                 show_screen = True
                 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), display=1)
@@ -214,16 +215,19 @@ if __name__ == '__main__':
             else:
                 total_test = 10
                 show_screen = False
-            if i % 1000 == 0 and i != 1:
-                print('beginning test')
+            if i % 100 == 0 and i != 1:
+                #print('beginning test')
                 curr_means = []
                 for iterator in range(total_test):
                     SARSA_agent.test(i, show_screen, iterator)
                     curr_means.append(int(SARSA_agent.all_rewards[-1]))
                 mean_list.append(np.mean(curr_means))
-                all_vals.append(np.mean(mean_list))
+                all_vals.append(np.mean(mean_list[-100:-1]))
+                # updates mean reward so negative rewards become given for vales lower than test mean
+                #SARSA_agent.mean_reward = all_vals[-1]
+
                 print(i)
-                print(mean_list[-1], max(curr_means))
+                print((mean_list[-1], max(curr_means)))
                 if show_screen:
                     pygame.display.quit()
 
