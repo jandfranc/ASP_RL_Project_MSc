@@ -104,14 +104,16 @@ import matplotlib.pyplot as plt
 import pickle
 
 def test(env, agent):
-    with open('episode_rewards_means.pickle', 'rb') as learner:
+    with open('episode_rewards_means_DDQN.pickle', 'rb') as learner:
         episode_rewards_means = pickle.load(learner)
 
     plt.plot(episode_rewards_means)
     plt.show()
     state = env.reset_world()
-    with open('deepQ.pickle', 'rb') as learner:
-        agent.model = pickle.load(learner)
+    with open('deepQ_DDQN_1.pickle', 'rb') as learner:
+        agent.model1 = pickle.load(learner)
+    with open('deepQ_DDQN_2.pickle', 'rb') as learner:
+        agent.model2 = pickle.load(learner)
     while True:
         action = agent.get_action(state, eps=0)
         state, reward, done = env.step(action)
@@ -124,10 +126,15 @@ def mini_batch_train_frames(env, agent, max_frames, batch_size):
     episode_rewards_means = []
     state = env.reset_world()
     episode_reward = 0
-    with open('deepQ.pickle', 'rb') as learner:
-        agent.model = pickle.load(learner)
-    with open('episode_rewards_means.pickle', 'rb') as learner:
-        episode_rewards_means = pickle.load(learner)
+    try:
+        with open('deepQ_DDQN_1.pickle', 'rb') as learner:
+            agent.model1 = pickle.load(learner)
+        with open('deepQ_DDQN_2.pickle', 'rb') as learner:
+            agent.model2 = pickle.load(learner)
+        with open('episode_rewards_means_DDQN.pickle', 'rb') as learner:
+            episode_rewards_means = pickle.load(learner)
+    except:
+        print('No previous model found')
 
     for frame in range(max_frames):
         action = agent.get_action(state)
@@ -146,10 +153,12 @@ def mini_batch_train_frames(env, agent, max_frames, batch_size):
             env.reset_world()
             episode_reward = 0
             if len(episode_rewards) % 10 == 0:
-                with open(r"episode_rewards_means_conv.pickle", "wb") as output_file:
+                with open(r"episode_rewards_means_DDQN.pickle", "wb") as output_file:
                     pickle.dump(episode_rewards_means, output_file)
-                with open(r"deepQ_conv.pickle", "wb") as output_file:
-                    pickle.dump(agent.model, output_file)
+                with open(r"deepQ_DDQN_1.pickle", "wb") as output_file:
+                    pickle.dump(agent.model1, output_file)
+                with open(r"deepQ_DDQN_2.pickle", "wb") as output_file:
+                    pickle.dump(agent.model2, output_file)
             if len(episode_rewards_means) % 500 == 0:
                 plt.plot(episode_rewards_means)
                 plt.show()
